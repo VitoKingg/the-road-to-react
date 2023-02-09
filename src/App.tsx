@@ -1,21 +1,63 @@
 import InputWithLabel from './components/InputWithLabel';
 import List from './components/List';
-import { ListContentsType, ListContentType, GetListsType } from './interfaces';
-import { useStorageState } from './utilities/HookUtilities';
+import {
+  GetListsType,
+  ListContentsType,
+  ListContentType,
+  ListsAction,
+  ListsState,
+  ReducerActionType
+} from './interfaces';
 import ApiUtilities from './utilities/ApiUtilities';
+import { useStorageState } from './utilities/HookUtilities';
 
+import { useEffect, useReducer } from 'react';
 import './App.css';
-import { useEffect, useState } from 'react';
 
 function App() {
   const [searchValue, setSearchValue] = useStorageState(
     'search_value',
     'React'
   );
-  const defaultListsState: ListContentsType = [];
-  const [lists, setLists] = useState(defaultListsState);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isError, setIsError] = useState<boolean>(false);
+  const defaultLists: ListContentsType = [];
+  const [lists, dipatchLists] = useReducer(listsReducer, {
+    data: defaultLists,
+    isLoading: false,
+    isError: false
+  });
+
+  function listsReducer(state: ListsState, action: ListsAction): ListsState {
+    switch (action.type) {
+      case ReducerActionType.ListsFetchInit:
+        return {
+          ...state,
+          isLoading: true,
+          isError: false
+        };
+      case ReducerActionType.ListsFetchSuccess:
+        return {
+          ...state,
+          isLoading: false,
+          isError: false,
+          data: action.payload
+        };
+      case ReducerActionType.ListsFetchFailure:
+        return {
+          ...state,
+          isLoading: false,
+          isError: true
+        };
+      case ReducerActionType.RemoveList:
+        return {
+          ...state,
+          data: state.data.filter(
+            (list: ListContentType) => action.payload.objectID !== list.objectID
+          )
+        };
+      default:
+        throw new Error();
+    }
+  }
 
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
@@ -23,31 +65,28 @@ function App() {
   }
 
   function handleRemoveList(item: ListContentType) {
-    const newLists = lists.filter((list) => {
-      return item.objectID !== list.objectID;
-    });
-    console.log(newLists);
-
-    setLists(newLists);
+    dipatchLists({ type: ReducerActionType.RemoveList, payload: item });
   }
 
   async function getLists() {
-    setIsLoading(true);
-    setIsError(false);
+    dipatchLists({
+      type: ReducerActionType.ListsFetchInit
+    });
 
     try {
       const result = await ApiUtilities.get<GetListsType>('public/lists.json');
-      const newLists = result?.data || defaultListsState;
-      setLists(newLists);
+      const newLists = result?.data || defaultLists;
+      dipatchLists({
+        type: ReducerActionType.ListsFetchSuccess,
+        payload: newLists
+      });
     } catch (error) {
-      setIsError(true);
+      dipatchLists({ type: ReducerActionType.ListsFetchFailure });
       console.error(error);
     }
-
-    setIsLoading(false);
   }
 
-  const searchedLists = lists.filter((list) => {
+  const searchedLists = lists.data.filter((list) => {
     const searchVal = searchValue.trim().toLowerCase();
     const filterTitle = list.title.toLowerCase();
 
@@ -56,20 +95,8 @@ function App() {
 
   const errorTemplate = <div>Something went wrong</div>;
   const loadingTemplate = <div>Loading</div>;
-  const renderTemplate = (
-    <div className='App'>
-      <h1>My Hacker Stories</h1>
-      <InputWithLabel
-        id='search'
-        value={searchValue}
-        isFocused={true}
-        onInputChange={handleSearch}
-      >
-        Search:
-      </InputWithLabel>
-      <hr />
-      <List lists={searchedLists} onRemoveItem={handleRemoveList} />
-    </div>
+  const listsTemplate = (
+    <List lists={searchedLists} onRemoveItem={handleRemoveList} />
   );
 
   useEffect(() => {
@@ -78,8 +105,20 @@ function App() {
 
   return (
     <>
-      {isError && errorTemplate}
-      {isLoading ? loadingTemplate : renderTemplate}
+      <div className='App'>
+        <h1>My Hacker Stories</h1>
+        <InputWithLabel
+          id='search'
+          value={searchValue}
+          isFocused={true}
+          onInputChange={handleSearch}
+        >
+          Search:
+        </InputWithLabel>
+        <hr />
+        {lists.isError && errorTemplate}
+        {lists.isLoading ? loadingTemplate : listsTemplate}
+      </div>
     </>
   );
 }
