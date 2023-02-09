@@ -1,16 +1,29 @@
-export interface ListContentType {
+interface ListType {
   title: string;
   url: string;
   author: string;
-  numComments: number;
   points: number;
   objectID: number;
+}
+
+export interface ListApiType extends ListType {
+  num_comments: number;
+  created_at: number;
+}
+
+export interface ListContentType extends ListType {
+  numComments: number;
+  createdAt: number;
 }
 
 export type ListContentsType = ListContentType[];
 
 export interface GetListsType {
-  data: ListContentsType;
+  hits: ListApiType[];
+  hitsPerpage: number;
+  nbHits: number;
+  nbPages: number;
+  page: number;
 }
 
 export enum ReducerActionType {

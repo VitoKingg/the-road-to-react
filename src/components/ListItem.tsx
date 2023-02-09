@@ -16,11 +16,12 @@ function ListItem(props: ListItemProps) {
   return (
     <li>
       <span>
-        <a href={item.url}>{item.title}</a>
+        <a href={item.url}>{item.title}&nbsp;</a>
       </span>
-      <span>{item.author}</span>
-      <span>{item.numComments}</span>
-      <span>{item.points}</span>
+      <span>{item.author}&nbsp;</span>
+      <span>{new Date(item.createdAt).toLocaleDateString()}&nbsp;</span>
+      <span>{item.numComments}&nbsp;</span>
+      <span>{item.points}&nbsp;</span>
       <span>
         <button type='button' onClick={handleRemoveItem}>
           Dismiss
