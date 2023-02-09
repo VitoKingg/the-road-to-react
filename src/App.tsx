@@ -14,19 +14,8 @@ function App() {
   );
   const defaultListsState: ListContentsType = [];
   const [lists, setLists] = useState(defaultListsState);
-
-  async function getLists() {
-    try {
-      const result = await ApiUtilities.get<GetListsType>('public/lists.json');
-      const newLists = result?.data || defaultListsState;
-      // setLists(newLists);
-      setTimeout(() => {
-        setLists(newLists);
-      }, 2000);
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isError, setIsError] = useState<boolean>(false);
 
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
@@ -42,6 +31,22 @@ function App() {
     setLists(newLists);
   }
 
+  async function getLists() {
+    setIsLoading(true);
+    setIsError(false);
+
+    try {
+      const result = await ApiUtilities.get<GetListsType>('public/lists.json');
+      const newLists = result?.data || defaultListsState;
+      setLists(newLists);
+    } catch (error) {
+      setIsError(true);
+      console.error(error);
+    }
+
+    setIsLoading(false);
+  }
+
   const searchedLists = lists.filter((list) => {
     const searchVal = searchValue.trim().toLowerCase();
     const filterTitle = list.title.toLowerCase();
@@ -49,11 +54,9 @@ function App() {
     return filterTitle.includes(searchVal);
   });
 
-  useEffect(() => {
-    getLists();
-  }, []);
-
-  return (
+  const errorTemplate = <div>Something went wrong</div>;
+  const loadingTemplate = <div>Loading</div>;
+  const renderTemplate = (
     <div className='App'>
       <h1>My Hacker Stories</h1>
       <InputWithLabel
@@ -67,6 +70,17 @@ function App() {
       <hr />
       <List lists={searchedLists} onRemoveItem={handleRemoveList} />
     </div>
+  );
+
+  useEffect(() => {
+    getLists();
+  }, []);
+
+  return (
+    <>
+      {isError && errorTemplate}
+      {isLoading ? loadingTemplate : renderTemplate}
+    </>
   );
 }
 
