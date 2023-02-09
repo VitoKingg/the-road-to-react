@@ -8,7 +8,7 @@ import {
   ListsState,
   ReducerActionType
 } from './interfaces';
-import ApiUtilities from './utilities/ApiUtilities';
+import ApiUtilities, { ApiEndpoint } from './utilities/ApiUtilities';
 import { useStorageState } from './utilities/HookUtilities';
 
 import { useEffect, useReducer } from 'react';
@@ -62,6 +62,7 @@ function App() {
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
     setSearchValue(val);
+    getLists();
   }
 
   function handleRemoveList(item: ListContentType) {
@@ -74,8 +75,26 @@ function App() {
     });
 
     try {
-      const result = await ApiUtilities.get<GetListsType>('public/lists.json');
-      const newLists = result?.data || defaultLists;
+      // const result = await ApiUtilities.get<GetListsType>('public/lists.json');
+      const result = await ApiUtilities.get<GetListsType>(
+        `${ApiEndpoint}search?query=${searchValue}`
+      );
+      const results = result?.hits;
+      const newLists =
+        results.length > 0
+          ? results.map((item) => {
+              const newHits: ListContentType = {
+                title: item.title,
+                url: item.url,
+                author: item.author,
+                numComments: item.num_comments,
+                points: item.points,
+                objectID: item.objectID,
+                createdAt: item.created_at
+              };
+              return newHits;
+            })
+          : defaultLists;
       dipatchLists({
         type: ReducerActionType.ListsFetchSuccess,
         payload: newLists
@@ -88,9 +107,9 @@ function App() {
 
   const searchedLists = lists.data.filter((list) => {
     const searchVal = searchValue.trim().toLowerCase();
-    const filterTitle = list.title.toLowerCase();
+    const filterTitle = list.title?.toLowerCase();
 
-    return filterTitle.includes(searchVal);
+    return filterTitle?.includes(searchVal);
   });
 
   const errorTemplate = <div>Something went wrong</div>;
