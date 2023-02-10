@@ -1,5 +1,6 @@
 import InputWithLabel from './components/InputWithLabel';
 import List from './components/List';
+
 import {
   GetListsType,
   ListContentsType,
@@ -8,10 +9,12 @@ import {
   ListsState,
   ReducerActionType
 } from './interfaces';
-import ApiUtilities, { ApiEndpoint } from './utilities/ApiUtilities';
+
+import ApiUtilities, { API_ENDPOINT } from './utilities/ApiUtilities';
 import { useStorageState } from './utilities/HookUtilities';
 
-import { useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
+
 import './App.css';
 
 function App() {
@@ -19,6 +22,7 @@ function App() {
     'search_value',
     'React'
   );
+  const [url, setUrl] = useState(`${API_ENDPOINT}search?query=${searchValue}`);
   const defaultLists: ListContentsType = [];
   const [lists, dipatchLists] = useReducer(listsReducer, {
     data: defaultLists,
@@ -59,27 +63,35 @@ function App() {
     }
   }
 
-  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value;
-    setSearchValue(val);
-    getLists();
+  function handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearchValue(e.target.value);
+  }
+
+  function handleSearchSubmit(e: React.FormEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    setUrl(`${API_ENDPOINT}search?query=${searchValue}`);
+    handleFetchLists();
   }
 
   function handleRemoveList(item: ListContentType) {
     dipatchLists({ type: ReducerActionType.RemoveList, payload: item });
   }
 
-  async function getLists() {
+  const handleFetchLists = useCallback(async () => {
+    // comment reason: button disabled set
+    // if (!searchValue.trim()) {
+    //   return;
+    // }
+
     dipatchLists({
       type: ReducerActionType.ListsFetchInit
     });
 
     try {
       // const result = await ApiUtilities.get<GetListsType>('public/lists.json');
-      const result = await ApiUtilities.get<GetListsType>(
-        `${ApiEndpoint}search?query=${searchValue}`
-      );
+      const result = await ApiUtilities.get<GetListsType>(url);
       const results = result?.hits;
+      console.log(results);
       const newLists =
         results.length > 0
           ? results.map((item) => {
@@ -103,23 +115,24 @@ function App() {
       dipatchLists({ type: ReducerActionType.ListsFetchFailure });
       console.error(error);
     }
-  }
+  }, [url]);
 
-  const searchedLists = lists.data.filter((list) => {
-    const searchVal = searchValue.trim().toLowerCase();
-    const filterTitle = list.title?.toLowerCase();
+  // const searchedLists = lists.data.filter((list) => {
+  //   const searchVal = searchValue.trim().toLowerCase();
+  //   const filterTitle = list.title?.toLowerCase();
 
-    return filterTitle?.includes(searchVal);
-  });
+  //   return filterTitle?.includes(searchVal);
+  // });
 
   const errorTemplate = <div>Something went wrong</div>;
   const loadingTemplate = <div>Loading</div>;
   const listsTemplate = (
-    <List lists={searchedLists} onRemoveItem={handleRemoveList} />
+    // <List lists={searchedLists} onRemoveItem={handleRemoveList} />
+    <List lists={lists.data} onRemoveItem={handleRemoveList} />
   );
 
   useEffect(() => {
-    getLists();
+    handleFetchLists();
   }, []);
 
   return (
@@ -130,10 +143,17 @@ function App() {
           id='search'
           value={searchValue}
           isFocused={true}
-          onInputChange={handleSearch}
+          onInputChange={handleSearchInput}
         >
           Search:
         </InputWithLabel>
+        <button
+          type='button'
+          disabled={!searchValue.trim()}
+          onClick={handleSearchSubmit}
+        >
+          Submit
+        </button>
         <hr />
         {lists.isError && errorTemplate}
         {lists.isLoading ? loadingTemplate : listsTemplate}
