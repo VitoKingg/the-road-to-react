@@ -1,6 +1,6 @@
 export const API_ENDPOINT = 'http://hn.algolia.com/api/v1/';
 
-export const ApiUtilities = {
+const ApiUtilities = {
   get: <TResponse,>(url: string) => requestApi<TResponse>(url),
   post: <TBody extends BodyInit, TResponse>(url: string, body: TBody) =>
     requestApi<TResponse>(url, { method: 'Post', body })

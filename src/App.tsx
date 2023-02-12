@@ -1,5 +1,6 @@
 import InputWithLabel from './components/InputWithLabel';
 import List from './components/List';
+import SearchForm from './components/SearchForm';
 
 import {
   GetListsType,
@@ -8,12 +9,13 @@ import {
   ListsAction,
   ListsState,
   ReducerActionType
-} from './interfaces';
+} from './types';
 
-import ApiUtilities, { API_ENDPOINT } from './utilities/ApiUtilities';
-import { useStorageState } from './utilities/HookUtilities';
+import { API_ENDPOINT } from './utils/ApiUtils';
+import { useStorageState } from './utils/HookUtils';
 
 import { useCallback, useEffect, useReducer, useState } from 'react';
+import axios from 'axios';
 
 import './App.css';
 
@@ -67,10 +69,9 @@ function App() {
     setSearchValue(e.target.value);
   }
 
-  function handleSearchSubmit(e: React.FormEvent<HTMLButtonElement>) {
+  function handleSearchSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setUrl(`${API_ENDPOINT}search?query=${searchValue}`);
-    handleFetchLists();
   }
 
   function handleRemoveList(item: ListContentType) {
@@ -89,8 +90,8 @@ function App() {
 
     try {
       // const result = await ApiUtilities.get<GetListsType>('public/lists.json');
-      const result = await ApiUtilities.get<GetListsType>(url);
-      const results = result?.hits;
+      const result = await axios.get<GetListsType>(url);
+      const results = result.data?.hits;
       console.log(results);
       const newLists =
         results.length > 0
@@ -117,43 +118,26 @@ function App() {
     }
   }, [url]);
 
-  // const searchedLists = lists.data.filter((list) => {
-  //   const searchVal = searchValue.trim().toLowerCase();
-  //   const filterTitle = list.title?.toLowerCase();
-
-  //   return filterTitle?.includes(searchVal);
-  // });
-
   const errorTemplate = <div>Something went wrong</div>;
   const loadingTemplate = <div>Loading</div>;
   const listsTemplate = (
-    // <List lists={searchedLists} onRemoveItem={handleRemoveList} />
     <List lists={lists.data} onRemoveItem={handleRemoveList} />
   );
 
   useEffect(() => {
     handleFetchLists();
-  }, []);
+    console.log(1111);
+  }, [handleFetchLists]);
 
   return (
     <>
       <div className='App'>
         <h1>My Hacker Stories</h1>
-        <InputWithLabel
-          id='search'
-          value={searchValue}
-          isFocused={true}
-          onInputChange={handleSearchInput}
-        >
-          Search:
-        </InputWithLabel>
-        <button
-          type='button'
-          disabled={!searchValue.trim()}
-          onClick={handleSearchSubmit}
-        >
-          Submit
-        </button>
+        <SearchForm
+          searchValue={searchValue}
+          onSearchInput={handleSearchInput}
+          onSearchSubmit={handleSearchSubmit}
+        />
         <hr />
         {lists.isError && errorTemplate}
         {lists.isLoading ? loadingTemplate : listsTemplate}

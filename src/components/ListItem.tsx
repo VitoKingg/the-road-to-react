@@ -1,4 +1,4 @@
-import { ListContentType } from '../interfaces';
+import { ListContentType } from '../types';
 
 type ListItemProps = {
   item: ListContentType;
