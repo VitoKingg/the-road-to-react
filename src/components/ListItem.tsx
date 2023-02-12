@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ListContentType } from '../types';
 
 type ListItemProps = {
@@ -5,7 +6,8 @@ type ListItemProps = {
   onRemoveItem: (item: ListContentType) => void;
 };
 
-function ListItem(props: ListItemProps) {
+const ListItem = memo(function ListItem(props: ListItemProps) {
+  console.log('ListItem');
   const { item, onRemoveItem } = props;
 
   function handleRemoveItem(e: React.MouseEvent<HTMLButtonElement>) {
@@ -29,6 +31,6 @@ function ListItem(props: ListItemProps) {
       </span>
     </li>
   );
-}
+});
 
 export default ListItem;

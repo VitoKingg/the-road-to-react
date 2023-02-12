@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ListContentsType, ListContentType } from '../types';
 import ListItem from './ListItem';
 
@@ -6,7 +7,8 @@ type ListProps = {
   onRemoveItem: (item: ListContentType) => void;
 };
 
-function List(props: ListProps) {
+const List = memo(function List(props: ListProps) {
+  console.log('List');
   const { lists, onRemoveItem } = props;
 
   const itemList = lists.map((item) => (
@@ -18,6 +20,6 @@ function List(props: ListProps) {
       <ul>{itemList}</ul>
     </div>
   );
-}
+});
 
 export default List;

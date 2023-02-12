@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import InputWithLabel from './InputWithLabel';
 
 interface SearchFormProps {
@@ -6,7 +7,9 @@ interface SearchFormProps {
   onSearchSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }
 
-function SearchForm(props: SearchFormProps) {
+const SearchForm = memo(function SearchForm(props: SearchFormProps) {
+  console.log('Form');
+
   return (
     <>
       <form onSubmit={props.onSearchSubmit}>
@@ -24,6 +27,6 @@ function SearchForm(props: SearchFormProps) {
       </form>
     </>
   );
-}
+});
 
 export default SearchForm;

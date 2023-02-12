@@ -14,12 +14,13 @@ import {
 import { API_ENDPOINT } from './utils/ApiUtils';
 import { useStorageState } from './utils/HookUtils';
 
-import { useCallback, useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import axios from 'axios';
 
 import './App.css';
 
 function App() {
+  console.log('App');
   const [searchValue, setSearchValue] = useStorageState(
     'search_value',
     'React'
@@ -65,18 +66,29 @@ function App() {
     }
   }
 
-  function handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleSearchInput = useCallback(function handleSearchInput(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
     setSearchValue(e.target.value);
-  }
+  },
+  []);
 
-  function handleSearchSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const handleSearchSubmit = useCallback(function handleSearchSubmit(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
     setUrl(`${API_ENDPOINT}search?query=${searchValue}`);
+  },
+  [searchValue]);
+
+  function getSumComments(lists: ListsState) {
+    console.log('Sum Comments');
+    return lists.data.reduce((result, value) => result + value.numComments, 0);
   }
 
-  function handleRemoveList(item: ListContentType) {
+  const handleRemoveList = useCallback((item: ListContentType) => {
     dipatchLists({ type: ReducerActionType.RemoveList, payload: item });
-  }
+  }, []);
 
   const handleFetchLists = useCallback(async () => {
     // comment reason: button disabled set
@@ -124,15 +136,16 @@ function App() {
     <List lists={lists.data} onRemoveItem={handleRemoveList} />
   );
 
+  const sumComments = useMemo(() => getSumComments(lists), [lists]);
+
   useEffect(() => {
     handleFetchLists();
-    console.log(1111);
   }, [handleFetchLists]);
 
   return (
     <>
       <div className='App'>
-        <h1>My Hacker Stories</h1>
+        <h1>My Hacker Stories with {sumComments} comments.</h1>
         <SearchForm
           searchValue={searchValue}
           onSearchInput={handleSearchInput}
