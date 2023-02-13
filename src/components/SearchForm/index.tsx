@@ -1,4 +1,4 @@
-import InputWithLabel from './InputWithLabel';
+import InputWithLabel from '../InputWithLabel';
 
 interface SearchFormProps {
   searchValue: string;

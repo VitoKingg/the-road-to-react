@@ -1,11 +1,30 @@
-import { ListContentType } from '../types';
+import { ListContentsType, ListContentType } from '../../types';
+
+type ListProps = {
+  lists: ListContentsType;
+  onRemoveItem: (item: ListContentType) => void;
+};
 
 type ListItemProps = {
   item: ListContentType;
   onRemoveItem: (item: ListContentType) => void;
 };
 
-function ListItem(props: ListItemProps) {
+function List(props: ListProps) {
+  const { lists, onRemoveItem } = props;
+
+  const itemList = lists.map((item) => (
+    <ListItem key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
+  ));
+
+  return (
+    <div>
+      <ul>{itemList}</ul>
+    </div>
+  );
+}
+
+export function ListItem(props: ListItemProps) {
   const { item, onRemoveItem } = props;
 
   function handleRemoveItem(e: React.MouseEvent<HTMLButtonElement>) {
@@ -31,4 +50,4 @@ function ListItem(props: ListItemProps) {
   );
 }
 
-export default ListItem;
+export default List;
