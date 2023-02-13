@@ -125,7 +125,6 @@ function App() {
 
   useEffect(() => {
     handleFetchLists();
-    console.log(1111);
   }, [handleFetchLists]);
 
   return (
